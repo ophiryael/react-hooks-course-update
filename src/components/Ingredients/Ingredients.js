@@ -13,25 +13,20 @@ function Ingredients() {
   }, [userIngredients]);
 
   const addIngredientHandler = async ingredient => {
-    await postIngredient(ingredient);
-    setUserIngredients(prevIngredients => [
-      ...prevIngredients,
-      { id: Math.random().toString(), ...ingredient }
-    ]);
-  };
-
-  const postIngredient = async ingredient => {
     try {
-      const res = await fetch(DUMMY_API_URL, {
+      await fetch(DUMMY_API_URL, {
         method: 'POST',
         body: JSON.stringify(ingredient),
         headers: { 'Content-Type': 'application/json' }
       });
+      console.log('Ingredient added successfully', ingredient);
 
-      console.log('Posted ingredient successfully', ingredient);
-      return res.json();
+      setUserIngredients(prevIngredients => [
+        ...prevIngredients,
+        { id: Math.random().toString(), ...ingredient }
+      ]);
     } catch (error) {
-      console.log('Posting ingredient failed', error);
+      console.log('Adding ingredient failed', { ingredient, error });
     }
   };
 
@@ -39,10 +34,17 @@ function Ingredients() {
     setUserIngredients(filteredIngredients);
   }, []);
 
-  const removeIngredientHandler = ingredientId => {
-    setUserIngredients(prevIngredients => {
-      return prevIngredients.filter(ingredient => ingredient.id !== ingredientId);
-    });
+  const removeIngredientHandler = async ingredientId => {
+    try {
+      await fetch(`${DUMMY_API_URL}/${ingredientId}`, { method: 'DELETE' });
+      console.log('Deleted ingredient successfully', { ingredientId });
+
+      setUserIngredients(prevIngredients => {
+        return prevIngredients.filter(ingredient => ingredient.id !== ingredientId);
+      });
+    } catch (error) {
+      console.log('Ingredient deletion failed', { ingredientId });
+    }
   };
 
   return (
