@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -10,14 +10,22 @@ function Ingredients() {
   const [userIngredients, setUserIngredients] = useState([]);
 
   useEffect(() => {
+    console.log('RENDERING INGREDIENTS');
+  }, [userIngredients]);
+
+  useEffect(() => {
     const initializeIngredients = async () => {
-      const fetchedIngredients = await fetchIngredients();
-      const formattedIngredients = formatFetchedIngredients(fetchedIngredients);
-      setUserIngredients(formattedIngredients);
+      const ingredients = await fetchAndFormatIngredients();
+      setUserIngredients(ingredients);
     };
 
     initializeIngredients();
   }, []);
+
+  const fetchAndFormatIngredients = async () => {
+    const fetchedIngredients = await fetchIngredients();
+    return formatFetchedIngredients(fetchedIngredients);
+  };
 
   const fetchIngredients = async () => {
     try {
@@ -65,6 +73,10 @@ function Ingredients() {
     }
   };
 
+  const filteredIngredientsHandler = useCallback(filteredIngredients => {
+    setUserIngredients(filteredIngredients);
+  }, []);
+
   const removeIngredientHandler = ingredientId => {
     setUserIngredients(prevIngredients => {
       return prevIngredients.filter(ingredient => ingredient.id !== ingredientId);
@@ -76,7 +88,10 @@ function Ingredients() {
       <IngredientForm onAddIngredient={addIngredientHandler} />
 
       <section>
-        <Search />
+        <Search
+          fetchAndFormatIngredients={fetchAndFormatIngredients}
+          onLoadIngredients={filteredIngredientsHandler}
+        />
         <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />
       </section>
     </div>
