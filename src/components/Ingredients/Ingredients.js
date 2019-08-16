@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { DUMMY_API_URL } from '../../dummayApi';
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
 import Search from './Search';
-
-const DUMMY_API = 'https://jsonplaceholder.typicode.com/albums';
 
 function Ingredients() {
   const [userIngredients, setUserIngredients] = useState([]);
@@ -12,34 +11,6 @@ function Ingredients() {
   useEffect(() => {
     console.log('RENDERING INGREDIENTS');
   }, [userIngredients]);
-
-  const fetchAndFormatIngredients = async () => {
-    const fetchedIngredients = await fetchIngredients();
-    return formatFetchedIngredients(fetchedIngredients);
-  };
-
-  const fetchIngredients = async () => {
-    try {
-      const res = await fetch(DUMMY_API);
-      console.log('Successfully fetched ingredients');
-      return res.json();
-    } catch (error) {
-      console.log('Failed to fetch ingredients', error);
-    }
-  };
-
-  const formatFetchedIngredients = fetchedIngredients => {
-    return fetchedIngredients.map(ingredient => ({
-      id: ingredient.id,
-      title: ingredient.title,
-      amount: getRandomInt()
-    }));
-  };
-
-  function getRandomInt() {
-    const MAX = 10;
-    return Math.floor(Math.random() * Math.floor(MAX));
-  }
 
   const addIngredientHandler = async ingredient => {
     await postIngredient(ingredient);
@@ -51,7 +22,7 @@ function Ingredients() {
 
   const postIngredient = async ingredient => {
     try {
-      const res = await fetch(DUMMY_API, {
+      const res = await fetch(DUMMY_API_URL, {
         method: 'POST',
         body: JSON.stringify(ingredient),
         headers: { 'Content-Type': 'application/json' }
@@ -79,10 +50,7 @@ function Ingredients() {
       <IngredientForm onAddIngredient={addIngredientHandler} />
 
       <section>
-        <Search
-          fetchAndFormatIngredients={fetchAndFormatIngredients}
-          onLoadIngredients={filteredIngredientsHandler}
-        />
+        <Search onLoadIngredients={filteredIngredientsHandler} />
         <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />
       </section>
     </div>
