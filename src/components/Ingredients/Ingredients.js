@@ -13,15 +13,6 @@ function Ingredients() {
     console.log('RENDERING INGREDIENTS');
   }, [userIngredients]);
 
-  useEffect(() => {
-    const initializeIngredients = async () => {
-      const ingredients = await fetchAndFormatIngredients();
-      setUserIngredients(ingredients);
-    };
-
-    initializeIngredients();
-  }, []);
-
   const fetchAndFormatIngredients = async () => {
     const fetchedIngredients = await fetchIngredients();
     return formatFetchedIngredients(fetchedIngredients);
