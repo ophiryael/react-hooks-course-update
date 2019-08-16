@@ -1,13 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
 import Search from './Search';
 
-const DUMMY_API = 'https://jsonplaceholder.typicode.com/posts';
+const DUMMY_API = 'https://jsonplaceholder.typicode.com/albums';
 
 function Ingredients() {
   const [userIngredients, setUserIngredients] = useState([]);
+
+  useEffect(() => {
+    const initializeIngredients = async () => {
+      const fetchedIngredients = await fetchIngredients();
+      const formattedIngredients = formatFetchedIngredients(fetchedIngredients);
+      setUserIngredients(formattedIngredients);
+    };
+
+    initializeIngredients();
+  }, []);
+
+  const fetchIngredients = async () => {
+    try {
+      const res = await fetch(DUMMY_API);
+      console.log('Successfully fetched ingredients');
+      return res.json();
+    } catch (error) {
+      console.log('Failed to fetch ingredients', error);
+    }
+  };
+
+  const formatFetchedIngredients = fetchedIngredients => {
+    return fetchedIngredients.map(ingredient => ({
+      id: ingredient.id,
+      title: ingredient.title,
+      amount: getRandomInt()
+    }));
+  };
+
+  function getRandomInt() {
+    const MAX = 10;
+    return Math.floor(Math.random() * Math.floor(MAX));
+  }
 
   const addIngredientHandler = async ingredient => {
     await postIngredient(ingredient);
