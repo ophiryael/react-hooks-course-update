@@ -4,14 +4,32 @@ import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
 import Search from './Search';
 
+const DUMMY_API = 'https://jsonplaceholder.typicode.com/posts';
+
 function Ingredients() {
   const [userIngredients, setUserIngredients] = useState([]);
 
-  const addIngredientHandler = ingredient => {
+  const addIngredientHandler = async ingredient => {
+    await postIngredient(ingredient);
     setUserIngredients(prevIngredients => [
       ...prevIngredients,
       { id: Math.random().toString(), ...ingredient }
     ]);
+  };
+
+  const postIngredient = async ingredient => {
+    try {
+      const res = await fetch(DUMMY_API, {
+        method: 'POST',
+        body: JSON.stringify(ingredient),
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      console.log('Posted ingredient successfully', ingredient);
+      return res.json();
+    } catch (error) {
+      console.log('Posting ingredient failed', error);
+    }
   };
 
   const removeIngredientHandler = ingredientId => {
