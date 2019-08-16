@@ -50,11 +50,15 @@ const Search = React.memo(({ onLoadIngredients }) => {
       onLoadIngredients(filteredIngredients);
     };
 
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       if (enteredFilter === inputRef.current.value) {
         setFilteredIngredients();
       }
     }, 500);
+
+    return () => {
+      clearTimeout(timer);
+    };
   }, [enteredFilter, onLoadIngredients]);
 
   return (
