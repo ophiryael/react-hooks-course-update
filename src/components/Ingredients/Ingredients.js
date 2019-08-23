@@ -3,11 +3,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DUMMY_API_URL } from '../../dummayApi';
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
+import ErrorModal from '../UI/ErrorModal';
 import Search from './Search';
 
 function Ingredients() {
   const [userIngredients, setUserIngredients] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState();
 
   useEffect(() => {
     console.log('RENDERING INGREDIENTS');
@@ -29,6 +31,7 @@ function Ingredients() {
         { id: Math.random().toString(), ...ingredient }
       ]);
     } catch (error) {
+      setError('Something went wrong!');
       console.log('Adding ingredient failed', { ingredient, error });
     } finally {
       setIsLoading(false);
@@ -50,14 +53,20 @@ function Ingredients() {
         return prevIngredients.filter(ingredient => ingredient.id !== ingredientId);
       });
     } catch (error) {
+      setError('Something went wrong!');
       console.log('Ingredient deletion failed', { ingredientId });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const clearError = () => {
+    setError(null);
+  };
+
   return (
     <div className="App">
+      {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
       <IngredientForm onAddIngredient={addIngredientHandler} loading={isLoading} />
 
       <section>
