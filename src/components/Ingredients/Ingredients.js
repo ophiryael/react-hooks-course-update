@@ -7,12 +7,15 @@ import Search from './Search';
 
 function Ingredients() {
   const [userIngredients, setUserIngredients] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     console.log('RENDERING INGREDIENTS');
   }, [userIngredients]);
 
   const addIngredientHandler = async ingredient => {
+    setIsLoading(true);
+
     try {
       await fetch(DUMMY_API_URL, {
         method: 'POST',
@@ -27,6 +30,8 @@ function Ingredients() {
       ]);
     } catch (error) {
       console.log('Adding ingredient failed', { ingredient, error });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -35,6 +40,8 @@ function Ingredients() {
   }, []);
 
   const removeIngredientHandler = async ingredientId => {
+    setIsLoading(true);
+
     try {
       await fetch(`${DUMMY_API_URL}/${ingredientId}`, { method: 'DELETE' });
       console.log('Deleted ingredient successfully', { ingredientId });
@@ -44,12 +51,14 @@ function Ingredients() {
       });
     } catch (error) {
       console.log('Ingredient deletion failed', { ingredientId });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="App">
-      <IngredientForm onAddIngredient={addIngredientHandler} />
+      <IngredientForm onAddIngredient={addIngredientHandler} loading={isLoading} />
 
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler} />
