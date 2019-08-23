@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useReducer, useState, useEffect, useCallback } from 'react';
 
 import { DUMMY_API_URL } from '../../dummayApi';
 import IngredientForm from './IngredientForm';
@@ -6,8 +6,22 @@ import IngredientList from './IngredientList';
 import ErrorModal from '../UI/ErrorModal';
 import Search from './Search';
 
+const ingredientReducer = (currentIngredient, action) => {
+  switch (action.type) {
+    case 'SET':
+      return action.ingredients;
+    case 'ADD':
+      return [...currentIngredient, action.ingredient];
+    case 'DELETE':
+      return currentIngredient.filter(ingredient => ingredient.id !== action.id);
+    default:
+      throw new Error('Should not get here!');
+  }
+};
+
 function Ingredients() {
-  const [userIngredients, setUserIngredients] = useState([]);
+  const [userIngredients, dispatch] = useReducer(ingredientReducer, []);
+  // const [userIngredients, setUserIngredients] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState();
 
@@ -26,10 +40,11 @@ function Ingredients() {
       });
       console.log('Ingredient added successfully', ingredient);
 
-      setUserIngredients(prevIngredients => [
-        ...prevIngredients,
-        { id: Math.random().toString(), ...ingredient }
-      ]);
+      // setUserIngredients(prevIngredients => [
+      //   ...prevIngredients,
+      //   { id: Math.random().toString(), ...ingredient }
+      // ]);
+      dispatch({ type: 'ADD', ingredient: { id: Math.random().toString(), ...ingredient } });
     } catch (error) {
       setError('Something went wrong!');
       console.log('Adding ingredient failed', { ingredient, error });
@@ -39,7 +54,8 @@ function Ingredients() {
   };
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
-    setUserIngredients(filteredIngredients);
+    // setUserIngredients(filteredIngredients);
+    dispatch({ type: 'SET', ingredients: filteredIngredients });
   }, []);
 
   const removeIngredientHandler = async ingredientId => {
@@ -49,9 +65,10 @@ function Ingredients() {
       await fetch(`${DUMMY_API_URL}/${ingredientId}`, { method: 'DELETE' });
       console.log('Deleted ingredient successfully', { ingredientId });
 
-      setUserIngredients(prevIngredients => {
-        return prevIngredients.filter(ingredient => ingredient.id !== ingredientId);
-      });
+      // setUserIngredients(prevIngredients => {
+      //   return prevIngredients.filter(ingredient => ingredient.id !== ingredientId);
+      // });
+      dispatch({ type: 'DELETE', id: ingredientId });
     } catch (error) {
       setError('Something went wrong!');
       console.log('Ingredient deletion failed', { ingredientId });
