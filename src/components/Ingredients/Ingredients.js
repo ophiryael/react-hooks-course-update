@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useCallback } from 'react';
+import React, { useReducer, useEffect, useCallback, useMemo } from 'react';
 import { DUMMY_API_URL } from '../../dummayApi';
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -70,7 +70,7 @@ function Ingredients() {
     dispatch({ type: 'SET', ingredients: filteredIngredients });
   }, []);
 
-  const removeIngredientHandler = async ingredientId => {
+  const removeIngredientHandler = useCallback(async ingredientId => {
     dispatchHttp({ type: 'SEND' });
 
     try {
@@ -86,11 +86,15 @@ function Ingredients() {
       dispatchHttp({ type: 'ERROR', errorMessage: 'Something went wrong!' });
       console.log('Ingredient deletion failed', { ingredientId });
     }
-  };
+  }, []);
 
   const clearError = () => {
     dispatchHttp({ type: 'CLEAR' });
   };
+
+  const ingredientList = useMemo(() => {
+    return <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />;
+  }, [userIngredients, removeIngredientHandler]);
 
   return (
     <div className="App">
@@ -99,7 +103,7 @@ function Ingredients() {
 
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler} />
-        <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />
+        {ingredientList}
       </section>
     </div>
   );
