@@ -42,7 +42,7 @@ function Ingredients() {
     console.log('RENDERING INGREDIENTS');
   }, [userIngredients]);
 
-  const addIngredientHandler = async ingredient => {
+  const addIngredientHandler = useCallback(async ingredient => {
     dispatchHttp({ type: 'SEND' });
 
     try {
@@ -63,7 +63,7 @@ function Ingredients() {
       dispatchHttp({ type: 'ERROR', errorMessage: 'Something went wrong!' });
       console.log('Adding ingredient failed', { ingredient, error });
     }
-  };
+  }, []);
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
     // setUserIngredients(filteredIngredients);
