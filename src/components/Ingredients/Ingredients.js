@@ -21,7 +21,7 @@ const ingredientReducer = (currentIngredient, action) => {
 
 function Ingredients() {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, []);
-  const { isLoading, error, data, sendRequest, reqExtra, reqIdentifier } = useHttp();
+  const { isLoading, error, data, sendRequest, reqExtra, reqIdentifier, clear } = useHttp();
 
   useEffect(() => {
     if (!isLoading && !error && reqIdentifier === 'REMOVE_INGREDIENT') {
@@ -31,9 +31,12 @@ function Ingredients() {
     }
   }, [data, reqExtra, reqIdentifier, isLoading, error]);
 
-  const addIngredientHandler = useCallback(ingredient => {
-    sendRequest(DUMMY_API_URL, 'POST', JSON.stringify(ingredient), ingredient, 'ADD_INGREDIENT');
-  }, [sendRequest]);
+  const addIngredientHandler = useCallback(
+    ingredient => {
+      sendRequest(DUMMY_API_URL, 'POST', JSON.stringify(ingredient), ingredient, 'ADD_INGREDIENT');
+    },
+    [sendRequest]
+  );
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
     dispatch({ type: 'SET', ingredients: filteredIngredients });
@@ -46,17 +49,13 @@ function Ingredients() {
     [sendRequest]
   );
 
-  const clearError = useCallback(() => {
-    // dispatchHttp({ type: 'CLEAR' });
-  }, []);
-
   const ingredientList = useMemo(() => {
     return <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />;
   }, [userIngredients, removeIngredientHandler]);
 
   return (
     <div className="App">
-      {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
+      {error && <ErrorModal onClose={clear}>{error}</ErrorModal>}
       <IngredientForm onAddIngredient={addIngredientHandler} loading={isLoading} />
 
       <section>
