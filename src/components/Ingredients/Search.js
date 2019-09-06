@@ -1,23 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-
-import { DUMMY_API_URL } from '../../dummayApi';
 import Card from '../UI/Card';
+import ErrorModal from '../UI/ErrorModal';
+import useHttp from '../../hooks/http';
+import { DUMMY_API_URL } from '../../dummayApi';
 import './Search.css';
-
-const fetchAndFormatIngredients = async () => {
-  const fetchedIngredients = await fetchIngredients();
-  return formatFetchedIngredients(fetchedIngredients);
-};
-
-const fetchIngredients = async () => {
-  try {
-    const res = await fetch(DUMMY_API_URL);
-    console.log('Successfully fetched ingredients');
-    return res.json();
-  } catch (error) {
-    console.log('Failed to fetch ingredients', error);
-  }
-};
 
 const formatFetchedIngredients = fetchedIngredients => {
   return fetchedIngredients.map(ingredient => ({
@@ -32,40 +18,45 @@ function getRandomInt() {
   return Math.floor(Math.random() * Math.floor(MAX));
 }
 
+const filterIngredientsByTitle = (ingredients, enteredFilter) => {
+  if (enteredFilter) {
+    return ingredients.filter(ingredient => ingredient.title === enteredFilter);
+  }
+  return ingredients;
+};
+
 const Search = React.memo(({ onLoadIngredients }) => {
   const [enteredFilter, setEnteredFilter] = useState('');
   const inputRef = useRef();
+  const { isLoading, data, error, sendRequest, clear } = useHttp();
 
   useEffect(() => {
-    const filterIngredientsByTitle = ingredients => {
-      if (enteredFilter) {
-        return ingredients.filter(ingredient => ingredient.title === enteredFilter);
-      }
-      return ingredients;
-    };
-
-    const setFilteredIngredients = async () => {
-      const ingredients = await fetchAndFormatIngredients();
-      const filteredIngredients = filterIngredientsByTitle(ingredients);
-      onLoadIngredients(filteredIngredients);
-    };
-
     const timer = setTimeout(() => {
       if (enteredFilter === inputRef.current.value) {
-        setFilteredIngredients();
+        sendRequest(DUMMY_API_URL, 'GET');
       }
     }, 500);
 
     return () => {
       clearTimeout(timer);
     };
-  }, [enteredFilter, onLoadIngredients]);
+  }, [enteredFilter, inputRef, sendRequest]);
+
+  useEffect(() => {
+    if (!isLoading && !error && data) {
+      const formattedFetchedIngredients = formatFetchedIngredients(data);
+      const filteredIngredients = filterIngredientsByTitle(formattedFetchedIngredients, enteredFilter);
+      onLoadIngredients(filteredIngredients);
+    }
+  }, [data, isLoading, error, onLoadIngredients, enteredFilter]);
 
   return (
     <section className="search">
+      {error && <ErrorModal onClose={clear}>{error}</ErrorModal>}
       <Card>
         <div className="search-input">
           <label>Filter by Title</label>
+          {isLoading && <span>Loading...</span>}
           <input
             ref={inputRef}
             type="text"
