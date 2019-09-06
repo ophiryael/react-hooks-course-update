@@ -4,6 +4,7 @@ import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
 import ErrorModal from '../UI/ErrorModal';
 import Search from './Search';
+import useHttp from '../../hooks/http';
 
 const ingredientReducer = (currentIngredient, action) => {
   switch (action.type) {
@@ -18,79 +19,35 @@ const ingredientReducer = (currentIngredient, action) => {
   }
 };
 
-const httpReducer = (currentHttpState, action) => {
-  switch (action.type) {
-    case 'SEND':
-      return { loading: true, error: null };
-    case 'RESPONSE':
-      return { ...currentHttpState, loading: false };
-    case 'ERROR':
-      return { loading: false, error: action.errorMessage };
-    case 'CLEAR':
-      return { ...currentHttpState, error: null };
-    default:
-      throw new Error('Should not get here!');
-  }
-};
-
 function Ingredients() {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, []);
-  const [httpState, dispatchHttp] = useReducer(httpReducer, { loading: false, error: null });
-  // const [userIngredients, setUserIngredients] = useState([]);
+  const { isLoading, error, data, sendRequest, reqExtra, reqIdentifier, clear } = useHttp();
 
   useEffect(() => {
-    console.log('RENDERING INGREDIENTS');
-  }, [userIngredients]);
-
-  const addIngredientHandler = useCallback(async ingredient => {
-    dispatchHttp({ type: 'SEND' });
-
-    try {
-      await fetch(DUMMY_API_URL, {
-        method: 'POST',
-        body: JSON.stringify(ingredient),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      console.log('Ingredient added successfully', ingredient);
-
-      // setUserIngredients(prevIngredients => [
-      //   ...prevIngredients,
-      //   { id: Math.random().toString(), ...ingredient }
-      // ]);
-      dispatchHttp({ type: 'RESPONSE' });
-      dispatch({ type: 'ADD', ingredient: { id: Math.random().toString(), ...ingredient } });
-    } catch (error) {
-      dispatchHttp({ type: 'ERROR', errorMessage: 'Something went wrong!' });
-      console.log('Adding ingredient failed', { ingredient, error });
+    if (!isLoading && !error && reqIdentifier === 'REMOVE_INGREDIENT') {
+      dispatch({ type: 'DELETE', id: reqExtra });
+    } else if (!isLoading && !error && reqIdentifier === 'ADD_INGREDIENT') {
+      dispatch({ type: 'ADD', ingredient: { id: Math.random().toString(), ...reqExtra } });
     }
-  }, []);
+  }, [data, reqExtra, reqIdentifier, isLoading, error]);
+
+  const addIngredientHandler = useCallback(
+    ingredient => {
+      sendRequest(DUMMY_API_URL, 'POST', JSON.stringify(ingredient), ingredient, 'ADD_INGREDIENT');
+    },
+    [sendRequest]
+  );
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
-    // setUserIngredients(filteredIngredients);
     dispatch({ type: 'SET', ingredients: filteredIngredients });
   }, []);
 
-  const removeIngredientHandler = useCallback(async ingredientId => {
-    dispatchHttp({ type: 'SEND' });
-
-    try {
-      await fetch(`${DUMMY_API_URL}/${ingredientId}`, { method: 'DELETE' });
-      console.log('Deleted ingredient successfully', { ingredientId });
-
-      // setUserIngredients(prevIngredients => {
-      //   return prevIngredients.filter(ingredient => ingredient.id !== ingredientId);
-      // });
-      dispatchHttp({ type: 'RESPONSE' });
-      dispatch({ type: 'DELETE', id: ingredientId });
-    } catch (error) {
-      dispatchHttp({ type: 'ERROR', errorMessage: 'Something went wrong!' });
-      console.log('Ingredient deletion failed', { ingredientId });
-    }
-  }, []);
-
-  const clearError = useCallback(() => {
-    dispatchHttp({ type: 'CLEAR' });
-  }, []);
+  const removeIngredientHandler = useCallback(
+    ingredientId => {
+      sendRequest(`${DUMMY_API_URL}/${ingredientId}`, 'DELETE', null, ingredientId, 'REMOVE_INGREDIENT');
+    },
+    [sendRequest]
+  );
 
   const ingredientList = useMemo(() => {
     return <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />;
@@ -98,8 +55,8 @@ function Ingredients() {
 
   return (
     <div className="App">
-      {httpState.error && <ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>}
-      <IngredientForm onAddIngredient={addIngredientHandler} loading={httpState.loading} />
+      {error && <ErrorModal onClose={clear}>{error}</ErrorModal>}
+      <IngredientForm onAddIngredient={addIngredientHandler} loading={isLoading} />
 
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler} />
